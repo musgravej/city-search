@@ -1,0 +1,3 @@
+[api-credentials]
+username=USERNAME
+password=PASSWORD
