@@ -97,15 +97,6 @@ def main():
         time.sleep(3)
         return
 
-    # print(zip_list)
-    # return
-    #
-    # zip_list = []
-    # zip_list = ['50201', '000', '90001', '40201', '98801', '12123']
-    # zip_list = '50201'
-
-    # city_lookup(zip_list)
-
 
 if __name__ == '__main__':
     init_api()
