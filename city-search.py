@@ -1,38 +1,52 @@
 import requests
 import configparser
 from xml.etree import ElementTree
+import csv
 
 
-def city_lookup(zipcode):
+def city_lookup(zip_list):
     """
     Get list of City, State, ZIP when searching by ZIP code
-    writes a tab-delimited file named city-st-zip.txt
-    :param zipcode: zipcode as string
-    :returns console output and tab-delimited file named city-st-zip.txt
+    writes a comma-delimited file named city-st-zip.csv
+    :param zip_list: ZIP codes as iterable
+    :returns console output and comma-delimited file named city-st-zip.csv
     """
+    results = []
 
-    url_query = (('http://production.shippingapis.com/'
-                  'ShippingAPITest.dll?API=CityStateLookup'
-                  '&XML=<CityStateLookupRequest '
-                  'USERID="{userid}"><ZipCode ID="0">'
-                  '<Zip5>{zip5}</Zip5></ZipCode>'
-                  '</CityStateLookupRequest>').format(userid=userid, 
-                                                      zip5=zipcode[:5]))
+    if not isinstance(zip_list, list):
+        zip_list = [zip_list]
 
-    response = requests.get(url_query)
-    root = ElementTree.fromstring(response.content)
+    for zipcode in zip_list:
+        url_query = (('http://production.shippingapis.com/'
+                      'ShippingAPITest.dll?API=CityStateLookup'
+                      '&XML=<CityStateLookupRequest '
+                      'USERID="{userid}"><ZipCode ID="0">'
+                      '<Zip5>{zip5}</Zip5></ZipCode>'
+                      '</CityStateLookupRequest>').format(userid=userid,
+                                                          zip5=zipcode[:5]))
 
-    for element in root.findall('*'):
-        try:
-            city = element.find('City').text
-            state = element.find('State').text
-            zip_reslt = element.find('Zip5').text
-        except AttributeError:
-            city = "n/a"
-            state = ""
-            zip_reslt = zipcode
+        response = requests.get(url_query)
+        root = ElementTree.fromstring(response.content)
 
-        print("{0}\t{1}\t{2}".format(zip_reslt, city, state))
+        for element in root.findall('*'):
+            r = dict()
+            try:
+                r['city'] = element.find('City').text
+                r['state'] = element.find('State').text
+                r['zip-search'] = element.find('Zip5').text
+            except AttributeError:
+                r['city'] = "n/a"
+                r['state'] = ""
+                r['zip-search'] = zipcode
+
+            results.append(r)
+
+    with open('city-st-zip.csv', 'w') as s:
+        csvw = csv.DictWriter(s, delimiter=',', fieldnames=['zip-search', 'city', 'state'], quoting=csv.QUOTE_ALL)
+        csvw.writeheader()
+        for row in results:
+            print("{:5}: {} {}".format(row['zip-search'], row['city'], row['state']))
+            csvw.writerow(row)
 
 
 def init_api():
@@ -48,10 +62,10 @@ def init_api():
 
 def main():
 
-    for zipcode in ['50201', '000', '90001', '40201', '98801', 
-                    '12123']:
+    zip_list = ['50201', '000', '90001', '40201', '98801', '12123']
+    # zip_list = '50201'
 
-        city_lookup(zipcode)
+    city_lookup(zip_list)
 
 
 if __name__ == '__main__':
