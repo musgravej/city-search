@@ -1,7 +1,9 @@
+import os
 import requests
 import configparser
 from xml.etree import ElementTree
 import csv
+import time
 
 
 def city_lookup(zip_list):
@@ -41,7 +43,7 @@ def city_lookup(zip_list):
 
             results.append(r)
 
-    with open('city-st-zip.csv', 'w') as s:
+    with open('city-st-zip.csv', 'w', newline='') as s:
         csvw = csv.DictWriter(s, delimiter=',', fieldnames=['zip-search', 'city', 'state'], quoting=csv.QUOTE_ALL)
         csvw.writeheader()
         for row in results:
@@ -61,11 +63,48 @@ def init_api():
 
 
 def main():
+    try:
+        ans1 = int(input('Search from command input or file? (0 input / 1 file): '))
 
-    zip_list = ['50201', '000', '90001', '40201', '98801', '12123']
+        if ans1 == 1:
+            ans2 = input("Enter file name (this directory, NOT 'city-st-zip.csv'): ")
+            try:
+                with open(os.path.join(os.curdir, ans2), 'r') as r:
+                    zip_list = r.read().splitlines()
+                    city_lookup(zip_list)
+            except FileNotFoundError:
+                print("Invalid file name")
+                time.sleep(3)
+
+        elif ans1 == 0:
+            zip_list = []
+            ans3 = 99
+            while ans3 != '0':
+                ans3 = input('Enter 5-digit ZIP to search for, 0 when done: ')
+                if ans3 == '0':
+                    break
+                zip_list.append(ans3)
+
+            city_lookup(zip_list)
+
+        else:
+            print("Invalid Choice, try again")
+            time.sleep(3)
+            return
+
+    except ValueError:
+        print("Invalid Choice, try again")
+        time.sleep(3)
+        return
+
+    # print(zip_list)
+    # return
+    #
+    # zip_list = []
+    # zip_list = ['50201', '000', '90001', '40201', '98801', '12123']
     # zip_list = '50201'
 
-    city_lookup(zip_list)
+    # city_lookup(zip_list)
 
 
 if __name__ == '__main__':
